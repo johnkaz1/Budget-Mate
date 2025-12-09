@@ -18,3 +18,12 @@ Dynamic Charts: Doughnut chart for visualizing income vs. expenses.
 Auto-Increment IDs: Database handles unique transaction IDs tied to users ids.
 
 Responsive and Interactive: Frontend updates dynamically on user actions.
+
+
+In order to run you need to :
+Have Node Modules installed in to the Directory
+Create a Database (local or not)
+Run node server. js
+Run index.html
+
+GOOD TO GO!!!
