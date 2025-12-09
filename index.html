@@ -1,60 +1,141 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<title>Personal Budget Tracker</title>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<style>
-body { font-family: Arial; padding: 20px; }
-.hidden { display: none; }
-table { border-collapse: collapse; width: 100%; margin-top: 20px; }
-table, th, td { border: 1px solid #ccc; }
-th, td { padding: 8px; text-align: center; }
-input, select, button { margin: 5px; padding: 5px; }
-</style>
-</head>
-<body>
+let userId = null;
+const API_URL = 'http://localhost:3000';
+let chart;
 
-<h1>Personal Budget Tracker</h1>
+// ----------------- Auth -----------------
+function signup() {
+    const username = document.getElementById('username').value.trim();
+    const password = document.getElementById('password').value.trim();
+    const msg = document.getElementById('authMessage');
 
-<!-- Login / Signup -->
-<div id="authDiv">
-    <h2>Login / Signup</h2>
-    <input type="text" id="username" placeholder="Username">
-    <input type="password" id="password" placeholder="Password">
-    <button onclick="signup()">Sign Up</button>
-    <button onclick="login()">Login</button>
-    <p id="authMessage" style="color:red;"></p>
-</div>
+    if(!username || !password) { msg.textContent='Enter username and password'; return; }
 
-<!-- Main App -->
-<div id="mainDiv" class="hidden">
-    <h2>Add Transaction</h2>
-    <input type="number" id="amount" placeholder="Amount" required>
-    <input type="text" id="category" placeholder="Category" required>
-    <select id="type" required>
-        <option value="income">Income</option>
-        <option value="expense">Expense</option>
-    </select>
-    <input type="date" id="date" required>
-    <input type="text" id="description" placeholder="Description">
-    <button onclick="addTransaction()">Add Transaction</button>
+    fetch(`${API_URL}/signup`, {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({username,password})
+    }).then(res=>res.json())
+      .then(data=>{
+          if(data.message) { msg.textContent=data.message; return; }
+          msg.style.color='green';
+          msg.textContent='Signup successful! Logging in...';
+          login(); // auto-login after signup
+      });
+}
 
-    <h2>Transactions</h2>
-    <table id="transactionsTable">
-        <thead>
-            <tr>
-                <th>ID</th><th>Amount</th><th>Category</th><th>Type</th>
-                <th>Date</th><th>Description</th><th>Actions</th>
-            </tr>
-        </thead>
-        <tbody></tbody>
-    </table>
+function login() {
+    const username = document.getElementById('username').value.trim();
+    const password = document.getElementById('password').value.trim();
+    const msg = document.getElementById('authMessage');
 
-    <h2>Summary</h2>
-    <canvas id="summaryChart" width="400" height="200"></canvas>
-</div>
+    if(!username || !password) { msg.textContent='Enter username and password'; return; }
 
-<script src="app.js"></script>
-</body>
-</html>
+    fetch(`${API_URL}/login`, {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({username,password})
+    }).then(res=>{
+        if(res.status!==200) return res.json().then(d=>{ throw new Error(d.message); });
+        return res.json();
+    }).then(data=>{
+        userId = data.id;
+
+        // Animate login card out
+        const authDiv = document.getElementById('authDiv');
+        const mainDiv = document.getElementById('mainDiv');
+
+        authDiv.classList.add('fade-out');
+
+        setTimeout(() => {
+            authDiv.style.display = 'none';
+            mainDiv.style.display = 'flex';
+            mainDiv.classList.add('fade-in');
+
+            fetchTransactions(); // fetch and display transactions + chart
+        }, 500);
+    }).catch(err=>{
+        msg.textContent = err.message;
+    });
+}
+
+// ----------------- Transactions -----------------
+function fetchTransactions() {
+    fetch(`${API_URL}/transactions/${userId}`)
+    .then(res=>res.json())
+    .then(data=>{
+        const tbody = document.querySelector('#transactionsTable tbody');
+        tbody.innerHTML='';
+        let income=0, expense=0;
+
+        data.forEach(tx=>{
+            const row = document.createElement('tr');
+            row.classList.add('adding'); // animation
+            row.innerHTML = `
+                <td>${tx.id}</td>
+                <td>${tx.amount}</td>
+                <td>${tx.category}</td>
+                <td>${tx.type}</td>
+                <td>${tx.date}</td>
+                <td>${tx.description||''}</td>
+                <td>
+                    <button class="delete-btn" onclick="deleteTransaction(${tx.id}, this)">Delete</button>
+                </td>
+            `;
+            tbody.appendChild(row);
+
+            if(tx.type==='income') income+=parseFloat(tx.amount);
+            else expense+=parseFloat(tx.amount);
+        });
+
+        updateChart(income, expense);
+    });
+}
+
+function addTransaction() {
+    const amount = document.getElementById('amount').value;
+    const category = document.getElementById('category').value;
+    const type = document.getElementById('type').value;
+    const date = document.getElementById('date').value;
+    const description = document.getElementById('description').value;
+
+    if(!amount || !category || !date) return alert('Please fill required fields');
+
+    fetch(`${API_URL}/transactions`, {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({amount, category, type, date, description, user_id: userId})
+    }).then(res=>res.json()).then(()=>{
+        fetchTransactions(); // always fetch latest to update table + chart
+    });
+}
+
+function deleteTransaction(id, btn) {
+    const tr = btn.closest('tr');
+    tr.classList.add('deleting'); // animation
+
+    setTimeout(() => {
+        fetch(`${API_URL}/transactions/${id}`, { method:'DELETE' })
+        .then(()=> {
+            fetchTransactions(); // refresh table + chart
+        });
+    }, 500);
+}
+
+// ----------------- Chart -----------------
+function updateChart(income, expense) {
+    const ctx = document.getElementById('summaryChart').getContext('2d');
+
+    if(chart) chart.destroy();
+
+    chart = new Chart(ctx,{
+        type:'doughnut',
+        data:{
+            labels:['Income','Expense'],
+            datasets:[{ data:[income,expense], backgroundColor:['#4caf50','#f44336'] }]
+        },
+        options:{
+            responsive:true,
+            plugins:{ legend:{ position:'bottom' } }
+        }
+    });
+}
