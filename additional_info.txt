@@ -1,0 +1,30 @@
+To Create Database : 
+sudo mysql
+
+CREATE DATABASE budget_tracker;
+
+USE budget_tracker;
+
+CREATE USER 'budgetuser'@'%' IDENTIFIED WITH mysql_native_password BY 'Brasa123!';
+GRANT ALL PRIVILEGES ON budget_tracker.* TO 'budgetuser'@'%';
+FLUSH PRIVILEGES;
+
+CREATE TABLE transactions (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    amount DECIMAL(10,2) NOT NULL,
+    category VARCHAR(50) NOT NULL,
+    type ENUM('income','expense') NOT NULL,
+    date DATE NOT NULL,
+    description VARCHAR(255),
+    user_id INT NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+CREATE TABLE users (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(50) NOT NULL UNIQUE,
+    password_hash VARCHAR(255) NOT NULL
+);
+
+BONUS : ip addr to find the ip of your machine to log in to the database
+And just like that the database is ready!!!
