@@ -1,5 +1,5 @@
 # Budget-Mate
-------V1.0------
+------V1.1------
 
 A fullstack web application that allows users to track their income and expenses, visualize data in charts, and manage transactions. Each user has a private account with their own transactions.
 
