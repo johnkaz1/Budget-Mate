@@ -1,141 +1,245 @@
-let userId = null;
-const API_URL = 'http://localhost:3000';
-let chart;
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Personal Budget Tracker</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+    /* Global styles */
+    body {
+        font-family: 'Roboto', sans-serif;
+        margin: 0;
+        padding: 0;
+        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        color: #2f3640;
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
 
-// ----------------- Auth -----------------
-function signup() {
-    const username = document.getElementById('username').value.trim();
-    const password = document.getElementById('password').value.trim();
-    const msg = document.getElementById('authMessage');
+    h1, h2 {
+        text-align: center;
+        margin-bottom: 20px;
+    }
 
-    if(!username || !password) { msg.textContent='Enter username and password'; return; }
+    /* Container */
+    .container {
+        width: 100%;
+        max-width: 1000px;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
 
-    fetch(`${API_URL}/signup`, {
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({username,password})
-    }).then(res=>res.json())
-      .then(data=>{
-          if(data.message) { msg.textContent=data.message; return; }
-          msg.style.color='green';
-          msg.textContent='Signup successful! Logging in...';
-          login(); // auto-login after signup
-      });
-}
+    /* Card style */
+    .card {
+        background-color: #fff;
+        border-radius: 12px;
+        box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+        padding: 30px;
+        margin-bottom: 20px;
+        width: 100%;
+        max-width: 450px;
+        text-align: center;
+        transition: transform 0.3s ease;
+    }
 
-function login() {
-    const username = document.getElementById('username').value.trim();
-    const password = document.getElementById('password').value.trim();
-    const msg = document.getElementById('authMessage');
+    .card:hover {
+        transform: translateY(-3px);
+    }
+	/* Fade animations */
+	.fade-out {
+		animation: fadeOut 0.5s forwards;
+	}
 
-    if(!username || !password) { msg.textContent='Enter username and password'; return; }
+	.fade-in {
+		animation: fadeIn 0.5s forwards;
+	}
 
-    fetch(`${API_URL}/login`, {
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({username,password})
-    }).then(res=>{
-        if(res.status!==200) return res.json().then(d=>{ throw new Error(d.message); });
-        return res.json();
-    }).then(data=>{
-        userId = data.id;
+	@keyframes fadeOut {
+		from { opacity: 1; transform: translateY(0); }
+		to { opacity: 0; transform: translateY(-50px); }
+	}
 
-        // Animate login card out
-        const authDiv = document.getElementById('authDiv');
-        const mainDiv = document.getElementById('mainDiv');
+	@keyframes fadeIn {
+		from { opacity: 0; transform: translateY(50px); }
+		to { opacity: 1; transform: translateY(0); }
+	}
+	
+	/* Transaction row animations */
+	tr.adding {
+		animation: slideIn 0.5s forwards;
+	}
 
-        authDiv.classList.add('fade-out');
+	tr.deleting {
+		animation: slideOut 0.5s forwards;
+	}
 
-        setTimeout(() => {
-            authDiv.style.display = 'none';
-            mainDiv.style.display = 'flex';
-            mainDiv.classList.add('fade-in');
+	@keyframes slideIn {
+		from { opacity: 0; transform: translateX(-30px); }
+		to { opacity: 1; transform: translateX(0); }
+	}
 
-            fetchTransactions(); // fetch and display transactions + chart
-        }, 500);
-    }).catch(err=>{
-        msg.textContent = err.message;
-    });
-}
+	@keyframes slideOut {
+		from { opacity: 1; transform: translateX(0); }
+		to { opacity: 0; transform: translateX(30px); }
+	}
 
-// ----------------- Transactions -----------------
-function fetchTransactions() {
-    fetch(`${API_URL}/transactions/${userId}`)
-    .then(res=>res.json())
-    .then(data=>{
-        const tbody = document.querySelector('#transactionsTable tbody');
-        tbody.innerHTML='';
-        let income=0, expense=0;
+    /* Inputs and buttons */
+    input, select {
+        width: 100%;
+        padding: 12px;
+        margin: 10px 0;
+        border-radius: 8px;
+        border: 1px solid #ccc;
+        font-size: 14px;
+    }
 
-        data.forEach(tx=>{
-            const row = document.createElement('tr');
-            row.classList.add('adding'); // animation
-            row.innerHTML = `
-                <td>${tx.id}</td>
-                <td>${tx.amount}</td>
-                <td>${tx.category}</td>
-                <td>${tx.type}</td>
-                <td>${tx.date}</td>
-                <td>${tx.description||''}</td>
-                <td>
-                    <button class="delete-btn" onclick="deleteTransaction(${tx.id}, this)">Delete</button>
-                </td>
-            `;
-            tbody.appendChild(row);
+    button {
+        padding: 12px 25px;
+        margin: 5px;
+        border: none;
+        border-radius: 8px;
+        background-color: #4caf50;
+        color: #fff;
+        font-size: 15px;
+        cursor: pointer;
+        transition: background 0.3s;
+    }
 
-            if(tx.type==='income') income+=parseFloat(tx.amount);
-            else expense+=parseFloat(tx.amount);
-        });
+    button:hover {
+        background-color: #43a047;
+    }
 
-        updateChart(income, expense);
-    });
-}
+    .delete-btn {
+        background-color: #f44336;
+        padding: 6px 12px;
+        border-radius: 5px;
+        color: #fff;
+        cursor: pointer;
+        border: none;
+        font-size: 13px;
+    }
 
-function addTransaction() {
-    const amount = document.getElementById('amount').value;
-    const category = document.getElementById('category').value;
-    const type = document.getElementById('type').value;
-    const date = document.getElementById('date').value;
-    const description = document.getElementById('description').value;
+    .delete-btn:hover {
+        background-color: #d32f2f;
+    }
 
-    if(!amount || !category || !date) return alert('Please fill required fields');
+    #authMessage {
+        color: red;
+        margin-top: 10px;
+        font-weight: 500;
+    }
 
-    fetch(`${API_URL}/transactions`, {
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({amount, category, type, date, description, user_id: userId})
-    }).then(res=>res.json()).then(()=>{
-        fetchTransactions(); // always fetch latest to update table + chart
-    });
-}
+    /* Table */
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 14px;
+        margin-top: 15px;
+    }
 
-function deleteTransaction(id, btn) {
-    const tr = btn.closest('tr');
-    tr.classList.add('deleting'); // animation
+    th, td {
+        padding: 12px;
+        text-align: center;
+        border-bottom: 1px solid #ddd;
+    }
 
-    setTimeout(() => {
-        fetch(`${API_URL}/transactions/${id}`, { method:'DELETE' })
-        .then(()=> {
-            fetchTransactions(); // refresh table + chart
-        });
-    }, 500);
-}
+    th {
+        background-color: #f0f0f0;
+    }
 
-// ----------------- Chart -----------------
-function updateChart(income, expense) {
-    const ctx = document.getElementById('summaryChart').getContext('2d');
+    /* Main app layout */
+    #mainDiv {
+        display: none;
+        flex-direction: column;
+        align-items: center;
+        width: 100%;
+    }
 
-    if(chart) chart.destroy();
+    .transaction-card, .table-card, .chart-card {
+        max-width: 900px;
+        width: 100%;
+    }
 
-    chart = new Chart(ctx,{
-        type:'doughnut',
-        data:{
-            labels:['Income','Expense'],
-            datasets:[{ data:[income,expense], backgroundColor:['#4caf50','#f44336'] }]
-        },
-        options:{
-            responsive:true,
-            plugins:{ legend:{ position:'bottom' } }
-        }
-    });
-}
+    #summaryChart {
+        max-width: 400px;
+        margin: 0 auto;
+    }
+
+    @media (max-width: 768px) {
+        .card { max-width: 90%; }
+        table { font-size: 12px; }
+    }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+    <!-- Login / Signup Card -->
+    <div id="authDiv" class="card">
+        <h1>Budget Tracker</h1>
+        <h2>Login / Signup</h2>
+        <input type="text" id="username" placeholder="Username">
+        <input type="password" id="password" placeholder="Password">
+        <div>
+            <button onclick="signup()">Sign Up</button>
+            <button onclick="login()">Login</button>
+        </div>
+        <p id="authMessage"></p>
+    </div>
+
+    <!-- Main Dashboard -->
+    <div id="mainDiv">
+
+        <!-- Transaction Form -->
+        <div class="card transaction-card">
+            <h2>Add Transaction</h2>
+            <input type="number" id="amount" placeholder="Amount">
+            <input type="text" id="category" placeholder="Category">
+            <select id="type">
+                <option value="income">Income</option>
+                <option value="expense">Expense</option>
+            </select>
+            <input type="date" id="date">
+            <input type="text" id="description" placeholder="Description">
+            <div>
+                <button onclick="addTransaction()">Add Transaction</button>
+            </div>
+        </div>
+
+        <!-- Transactions Table -->
+        <div class="card table-card">
+            <h2>Transactions</h2>
+            <table id="transactionsTable">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Amount</th>
+                        <th>Category</th>
+                        <th>Type</th>
+                        <th>Date</th>
+                        <th>Description</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+
+        <!-- Summary Chart -->
+        <div class="card chart-card">
+            <h2>Summary</h2>
+            <canvas id="summaryChart" width="400" height="250"></canvas>
+        </div>
+
+    </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
