@@ -39,10 +39,23 @@ function login() {
         return res.json();
     }).then(data=>{
         userId = data.id;
-        document.getElementById('authDiv').classList.add('hidden');
-        document.getElementById('mainDiv').classList.remove('hidden');
-        fetchTransactions();
-    }).catch(err=>{ msg.textContent = err.message; });
+
+        // Animate login card out
+        const authDiv = document.getElementById('authDiv');
+        const mainDiv = document.getElementById('mainDiv');
+
+        authDiv.classList.add('fade-out');
+
+        setTimeout(() => {
+            authDiv.style.display = 'none';
+            mainDiv.style.display = 'flex';
+            mainDiv.classList.add('fade-in');
+
+            fetchTransactions(); // fetch and display transactions + chart
+        }, 500);
+    }).catch(err=>{
+        msg.textContent = err.message;
+    });
 }
 
 // ----------------- Transactions -----------------
@@ -56,6 +69,7 @@ function fetchTransactions() {
 
         data.forEach(tx=>{
             const row = document.createElement('tr');
+            row.classList.add('adding'); // animation
             row.innerHTML = `
                 <td>${tx.id}</td>
                 <td>${tx.amount}</td>
@@ -64,10 +78,11 @@ function fetchTransactions() {
                 <td>${tx.date}</td>
                 <td>${tx.description||''}</td>
                 <td>
-                    <button onclick="deleteTransaction(${tx.id})">Delete</button>
+                    <button class="delete-btn" onclick="deleteTransaction(${tx.id}, this)">Delete</button>
                 </td>
             `;
             tbody.appendChild(row);
+
             if(tx.type==='income') income+=parseFloat(tx.amount);
             else expense+=parseFloat(tx.amount);
         });
@@ -83,30 +98,44 @@ function addTransaction() {
     const date = document.getElementById('date').value;
     const description = document.getElementById('description').value;
 
-    if(!amount || !category || !date) { alert('Fill amount, category, and date'); return; }
+    if(!amount || !category || !date) return alert('Please fill required fields');
 
     fetch(`${API_URL}/transactions`, {
         method:'POST',
         headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({amount,category,type,date,description,user_id:userId})
-    }).then(res=>res.json())
-      .then(()=> { fetchTransactions(); });
+        body: JSON.stringify({amount, category, type, date, description, user_id: userId})
+    }).then(res=>res.json()).then(()=>{
+        fetchTransactions(); // always fetch latest to update table + chart
+    });
 }
 
-function deleteTransaction(id) {
-    fetch(`${API_URL}/transactions/${id}`,{method:'DELETE'})
-    .then(()=>fetchTransactions());
+function deleteTransaction(id, btn) {
+    const tr = btn.closest('tr');
+    tr.classList.add('deleting'); // animation
+
+    setTimeout(() => {
+        fetch(`${API_URL}/transactions/${id}`, { method:'DELETE' })
+        .then(()=> {
+            fetchTransactions(); // refresh table + chart
+        });
+    }, 500);
 }
 
 // ----------------- Chart -----------------
 function updateChart(income, expense) {
     const ctx = document.getElementById('summaryChart').getContext('2d');
+
     if(chart) chart.destroy();
+
     chart = new Chart(ctx,{
         type:'doughnut',
         data:{
             labels:['Income','Expense'],
             datasets:[{ data:[income,expense], backgroundColor:['#4caf50','#f44336'] }]
+        },
+        options:{
+            responsive:true,
+            plugins:{ legend:{ position:'bottom' } }
         }
     });
 }
