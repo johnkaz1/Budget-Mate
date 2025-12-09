@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Personal Budget Tracker</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+body { font-family: Arial; padding: 20px; }
+.hidden { display: none; }
+table { border-collapse: collapse; width: 100%; margin-top: 20px; }
+table, th, td { border: 1px solid #ccc; }
+th, td { padding: 8px; text-align: center; }
+input, select, button { margin: 5px; padding: 5px; }
+</style>
+</head>
+<body>
+
+<h1>Personal Budget Tracker</h1>
+
+<!-- Login / Signup -->
+<div id="authDiv">
+    <h2>Login / Signup</h2>
+    <input type="text" id="username" placeholder="Username">
+    <input type="password" id="password" placeholder="Password">
+    <button onclick="signup()">Sign Up</button>
+    <button onclick="login()">Login</button>
+    <p id="authMessage" style="color:red;"></p>
+</div>
+
+<!-- Main App -->
+<div id="mainDiv" class="hidden">
+    <h2>Add Transaction</h2>
+    <input type="number" id="amount" placeholder="Amount" required>
+    <input type="text" id="category" placeholder="Category" required>
+    <select id="type" required>
+        <option value="income">Income</option>
+        <option value="expense">Expense</option>
+    </select>
+    <input type="date" id="date" required>
+    <input type="text" id="description" placeholder="Description">
+    <button onclick="addTransaction()">Add Transaction</button>
+
+    <h2>Transactions</h2>
+    <table id="transactionsTable">
+        <thead>
+            <tr>
+                <th>ID</th><th>Amount</th><th>Category</th><th>Type</th>
+                <th>Date</th><th>Description</th><th>Actions</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+
+    <h2>Summary</h2>
+    <canvas id="summaryChart" width="400" height="200"></canvas>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
