@@ -25,5 +25,6 @@ Have Node Modules installed in to the Directory
 Create a Database (local or not)
 Run node server. js
 Run index.html
+(OR You can run the batch file!)
 
 GOOD TO GO!!!
