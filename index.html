@@ -6,177 +6,158 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
-    /* Global styles */
-    body {
-        font-family: 'Roboto', sans-serif;
-        margin: 0;
-        padding: 0;
-        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-        color: #2f3640;
-        min-height: 100vh;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-    }
+:root {
+    --bg: #f5f7fb;
+    --card: #ffffff;
+    --text: #222;
+    --primary: #4caf50;
+    --primary-hover: #43a047;
+    --danger: #f44336;
+    --danger-hover: #d32f2f;
+    --border: #ddd;
+    --table-head: #f0f0f0;
+}
 
-    h1, h2 {
-        text-align: center;
-        margin-bottom: 20px;
-    }
+/* Dark mode */
+body.dark {
+    --bg: #121212;
+    --card: #1e1e1e;
+    --text: #eaeaea;
+    --primary: #81c784;
+    --primary-hover: #66bb6a;
+    --danger: #ef5350;
+    --danger-hover: #e53935;
+    --border: #333;
+    --table-head: #2a2a2a;
+}
 
-    /* Container */
-    .container {
-        width: 100%;
-        max-width: 1000px;
-        padding: 20px;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-    }
+/* Global */
+body {
+    font-family: 'Roboto', sans-serif;
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: background 0.3s, color 0.3s;
+}
 
-    /* Card style */
-    .card {
-        background-color: #fff;
-        border-radius: 12px;
-        box-shadow: 0 8px 20px rgba(0,0,0,0.15);
-        padding: 30px;
-        margin-bottom: 20px;
-        width: 100%;
-        max-width: 450px;
-        text-align: center;
-        transition: transform 0.3s ease;
-    }
+h1, h2 { text-align: center; }
 
-    .card:hover {
-        transform: translateY(-3px);
-    }
-	/* Fade animations */
-	.fade-out {
-		animation: fadeOut 0.5s forwards;
-	}
+/* Container */
+.container {
+    width: 100%;
+    max-width: 1000px;
+    padding: 20px;
+}
 
-	.fade-in {
-		animation: fadeIn 0.5s forwards;
-	}
+/* Cards */
+.card {
+    background: var(--card);
+    border-radius: 12px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+    padding: 30px;
+    margin-bottom: 20px;
+    transition: background 0.3s, transform 0.3s;
+}
 
-	@keyframes fadeOut {
-		from { opacity: 1; transform: translateY(0); }
-		to { opacity: 0; transform: translateY(-50px); }
-	}
+.card:hover { transform: translateY(-3px); }
 
-	@keyframes fadeIn {
-		from { opacity: 0; transform: translateY(50px); }
-		to { opacity: 1; transform: translateY(0); }
-	}
-	
-	/* Transaction row animations */
-	tr.adding {
-		animation: slideIn 0.5s forwards;
-	}
+/* Inputs */
+input, select {
+    width: 100%;
+    padding: 12px;
+    margin: 10px 0;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--card);
+    color: var(--text);
+}
 
-	tr.deleting {
-		animation: slideOut 0.5s forwards;
-	}
+/* Buttons */
+button {
+    padding: 12px 25px;
+    border: none;
+    border-radius: 8px;
+    background: var(--primary);
+    color: #fff;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.2s;
+}
 
-	@keyframes slideIn {
-		from { opacity: 0; transform: translateX(-30px); }
-		to { opacity: 1; transform: translateX(0); }
-	}
+button:hover {
+    background: var(--primary-hover);
+    transform: scale(1.05);
+}
 
-	@keyframes slideOut {
-		from { opacity: 1; transform: translateX(0); }
-		to { opacity: 0; transform: translateX(30px); }
-	}
+.delete-btn {
+    background: var(--danger);
+    padding: 6px 12px;
+    font-size: 13px;
+}
 
-    /* Inputs and buttons */
-    input, select {
-        width: 100%;
-        padding: 12px;
-        margin: 10px 0;
-        border-radius: 8px;
-        border: 1px solid #ccc;
-        font-size: 14px;
-    }
+.delete-btn:hover {
+    background: var(--danger-hover);
+}
 
-    button {
-        padding: 12px 25px;
-        margin: 5px;
-        border: none;
-        border-radius: 8px;
-        background-color: #4caf50;
-        color: #fff;
-        font-size: 15px;
-        cursor: pointer;
-        transition: background 0.3s;
-    }
+/* Table */
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
 
-    button:hover {
-        background-color: #43a047;
-    }
+th, td {
+    padding: 12px;
+    border-bottom: 1px solid var(--border);
+}
 
-    .delete-btn {
-        background-color: #f44336;
-        padding: 6px 12px;
-        border-radius: 5px;
-        color: #fff;
-        cursor: pointer;
-        border: none;
-        font-size: 13px;
-    }
+th {
+    background: var(--table-head);
+}
 
-    .delete-btn:hover {
-        background-color: #d32f2f;
-    }
+/* Dashboard */
+#mainDiv {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+}
 
-    #authMessage {
-        color: red;
-        margin-top: 10px;
-        font-weight: 500;
-    }
+/* Chart */
+#summaryChart {
+    max-width: 400px;
+    margin: auto;
+}
 
-    /* Table */
-    table {
-        width: 100%;
-        border-collapse: collapse;
-        font-size: 14px;
-        margin-top: 15px;
-    }
+/* Animations */
+.fade-in { animation: fadeIn 0.5s forwards; }
+.fade-out { animation: fadeOut 0.5s forwards; }
 
-    th, td {
-        padding: 12px;
-        text-align: center;
-        border-bottom: 1px solid #ddd;
-    }
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+}
 
-    th {
-        background-color: #f0f0f0;
-    }
+@keyframes fadeOut {
+    from { opacity: 1; }
+    to { opacity: 0; transform: translateY(-30px); }
+}
 
-    /* Main app layout */
-    #mainDiv {
-        display: none;
-        flex-direction: column;
-        align-items: center;
-        width: 100%;
-    }
-
-    .transaction-card, .table-card, .chart-card {
-        max-width: 900px;
-        width: 100%;
-    }
-
-    #summaryChart {
-        max-width: 400px;
-        margin: 0 auto;
-    }
-
-    @media (max-width: 768px) {
-        .card { max-width: 90%; }
-        table { font-size: 12px; }
-    }
+/* Dark mode toggle */
+#themeToggle {
+    position: fixed;
+    top: 15px;
+    right: 15px;
+    padding: 8px 12px;
+    border-radius: 20px;
+}
 </style>
+
 </head>
 <body>
+<button id="themeToggle" onclick="toggleDarkMode()">🌙</button>
+
 
 <div class="container">
 
