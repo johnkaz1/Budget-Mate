@@ -121,6 +121,21 @@ function deleteTransaction(id, btn) {
     }, 500);
 }
 
+function toggleDarkMode() {
+    document.body.classList.toggle('dark');
+
+    // save preference
+    const isDark = document.body.classList.contains('dark');
+    localStorage.setItem('theme', isDark ? 'dark' : 'light');
+}
+
+window.onload = () => {
+    if(localStorage.getItem('theme') === 'dark') {
+        document.body.classList.add('dark');
+    }
+};
+
+
 // ----------------- Chart -----------------
 function updateChart(income, expense) {
     const ctx = document.getElementById('summaryChart').getContext('2d');
