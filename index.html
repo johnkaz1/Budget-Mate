@@ -152,12 +152,68 @@ th {
     padding: 8px 12px;
     border-radius: 20px;
 }
+
+/* Toast container */
+#toast-container {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    pointer-events: none;
+}
+
+/* Toast */
+.toast {
+    min-width: 280px;
+    max-width: 420px;
+    background: var(--card);
+    color: var(--text);
+    padding: 16px 20px;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+    font-weight: 500;
+    text-align: center;
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+    animation: toastIn 0.4s ease forwards;
+    pointer-events: auto;
+}
+
+/* Toast types */
+.toast.success { border-left: 5px solid var(--primary); }
+.toast.error   { border-left: 5px solid var(--danger); }
+.toast.info    { border-left: 5px solid #2196f3; }
+.toast.warning { border-left: 5px solid #ff9800; }
+
+/* Exit animation */
+.toast.hide {
+    animation: toastOut 0.4s ease forwards;
+}
+
+/* Animations */
+@keyframes toastIn {
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes toastOut {
+    to {
+        opacity: 0;
+        transform: translateY(-20px) scale(0.95);
+    }
+}
+
 </style>
 
 </head>
 <body>
 <button id="themeToggle" onclick="toggleDarkMode()">🌙</button>
-
 
 <div class="container">
 
@@ -220,7 +276,7 @@ th {
 
     </div>
 </div>
-
+<div id="toast-container"></div>
 <script src="app.js"></script>
 </body>
 </html>
